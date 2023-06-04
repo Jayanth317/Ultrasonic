@@ -1,54 +1,24 @@
-# Wear levelling example
+# Ultrasonic Sensor for distance
+The sensor used in this example is DYP-A02-V2.1
+The series model is DYP-A02YYU-V2.0 
+It is a Split waterproof sensor and works on UART auto output
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+# UART output format
+Frame  data  |  Description                 | Byte
+Frame header | Fixed to 0xFF                | 1 byte
+Data_H       | High 8 bits of distance data | 1 byte
+Data_L       | Low 8 bits of distance data  | 1 byte
+SUM          | Communication checksum       |1 byte
 
-This example demonstrates how to use wear levelling library and FATFS library to store files in a partition inside SPI flash. Example does the following steps:
+# UART output example
+Frame header  | Data_H |  Data_L | SUM
+    0XFF      |  0X07  |  0XA1   | 0XA7
+    
+Note: The checksum only retains the lower 8 bits of the accumulated value;
 
-1. Use an "all-in-one" `esp_vfs_fat_spiflash_mount` function to:
-    - find a partition in SPI flash,
-    - initialize wear levelling library using this partition
-    - mount FAT filesystem using FATFS library (and format the filesystem, if the filesystem can not be mounted),
-    - register FAT filesystem in VFS, enabling C standard library and POSIX functions to be used.
-2. Create a file using `fopen` and write to it using `fprintf`.
-3. Open file for reading, read back the line, and print it to the terminal.
-
-Wear levelling partition size is set in partitions_example.csv file. See [Partition Tables](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/partition-tables.html) documentation for more information.
-
-## How to use example
-
-### Hardware required
-
-This example does not require any special hardware, and can be run on any common development board.
-
-### Build and flash
-
-Build the project and flash it to the board, then run monitor tool to view serial output:
-
-```
-idf.py -p PORT flash monitor
-```
-
-(Replace PORT with serial port name.)
-
-(To exit the serial monitor, type ``Ctrl-]``.)
-
-See the Getting Started Guide for full steps to configure and use ESP-IDF to build projects.
-
-## Example output
-
-Here is a typical example console output. 
-
-```
-I (280) example: Mounting FAT filesystem
-W (440) vfs_fat_spiflash: f_mount failed (13)
-I (440) vfs_fat_spiflash: Formatting FATFS partition, allocation unit size=4096
-I (660) vfs_fat_spiflash: Mounting again
-I (660) example: Opening file
-I (910) example: File written
-I (910) example: Reading file
-I (920) example: Read from file: 'written using ESP-IDF v3.1-dev-171-gf9ad17eee-dirty'
-I (920) example: Unmounting FAT filesystem
-I (1000) example: Done
-```
-
-To erase the contents of wear levelling partition, run `idf.py erase-flash` command. Then upload the example again as described above.
+SUM = (Frame header + Data_H + Data_L)&0x00FF
+=(0XFF + 0X07 + 0XA1)&0x00FF
+=0XA7;
+Distance value = Data_H*256+ Data_L=0X07A1;
+Converted to decimal is equal to 1953;
+Indicates that the currently measured distance value is 1953 mm.
